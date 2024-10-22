@@ -75,9 +75,9 @@ type ExprElt interface {
 type CondExpr []ExprElt
 
 func (se CondExpr) String() string {
-	s, err := se.ToSQL(nil)
-	if err != nil {
-		s = err.Error()
+	s := ""
+	for _, exprElt := range se {
+		s += fmt.Sprintf("%v\n", exprElt)
 	}
 	return s
 }
@@ -124,7 +124,7 @@ func (c Condition) ToSQL(argsMap FilterArgs) (string, error) {
 	s := ""
 
 	if argsMap == nil {
-		return "", fmt.Errorf("invalid param")
+		return "", fmt.Errorf("invalid (nil) param")
 	}
 
 	if len(c.ArgName) < 2 {
@@ -148,9 +148,5 @@ func (c Condition) ToSQL(argsMap FilterArgs) (string, error) {
 }
 
 func (c Condition) String() string {
-	s, err := c.ToSQL(nil)
-	if err != nil {
-		return err.Error()
-	}
-	return s
+	return fmt.Sprintf("%v %v %v %v", c.Modality, c.ColumnName, c.Operator, c.ArgName)
 }

@@ -22,9 +22,15 @@ func (c *Config) FromYAML(bb []byte) error {
 
 // Parse may be called directly without load when the Config was declared directly in Go
 func (c *Config) Parse() error {
-	for _, opConfig := range c.Operations {
-		for _, customQuery := range opConfig.VariantsByTag {
+	for opName, opConfig := range c.Operations {
+		for variantName, customQuery := range opConfig.VariantsByTag {
 			var err error
+			if customQuery == nil {
+				return fmt.Errorf("Invalid (nil) customQuery def for SQL OpName:%v variant:%v", opName, variantName) // customQuery.Tokens)
+			}
+			if customQuery.Tokens == nil {
+				return fmt.Errorf("Invalid (nil) tokens for SQL OpName:%v variant:%v", opName, variantName) // customQuery.Tokens)
+			}
 			customQuery.CondExpr, err = customQuery.Tokens.Parse()
 			if err != nil {
 				return fmt.Errorf("Parse err: %v for expr: %v", err, customQuery.Tokens)

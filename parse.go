@@ -36,6 +36,7 @@ func ParseCondition(s string) (Condition, error) {
 		s = strings.TrimPrefix(s, "if_present ")
 		c.Modality = "if_present"
 	} else {
+		s = strings.TrimPrefix(s, "must ")
 		c.Modality = "must"
 	}
 

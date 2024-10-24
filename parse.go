@@ -86,13 +86,13 @@ func (expr Tokens) Parse() (CondExpr, error) {
 			var subExpr Tokens = Tokens(v)
 			subExprElts, err := subExpr.Parse()
 			if err != nil {
-				log.Fatalf("ParseExpr #v err: %v on: <%v>", idx, err, v)
+				log.Fatalf("ParseExpr %#v err: %v on: <%v>", idx, err, v)
 				return nil, err
 			}
 			exprElts = append(exprElts, subExprElts...)
 
 		default:
-			log.Fatalln("Tokens.Parse unhandled type: %T %v", exprElt, exprElt)
+			log.Fatalf("Tokens.Parse unhandled type: %T %v", exprElt, exprElt)
 		}
 	}
 

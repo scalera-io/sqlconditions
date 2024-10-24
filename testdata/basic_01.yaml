@@ -1,0 +1,22 @@
+---
+version: 1
+
+operations:
+  get-resources:
+    variants:
+      default:
+        condition:
+          - (
+          - if_present consumer_org_id = @orgID 
+          - OR if_present client_id = @userID 
+          - OR if_present consumer_id = @userID
+          - )
+          - AND
+          - (
+          - r.audiences = 'student'
+          - OR 
+          - - ( 
+            - r.audiences LIKE '%teacher%' 
+            - AND r.audiences LIKE '%student%'
+            - )
+          - )

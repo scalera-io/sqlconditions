@@ -35,6 +35,7 @@ func (c Config) GetOperation(opName string, searchedTagNames []string) (Operatio
 	}
 
 	for opTagsSpaceSeparated, op := range opConfig.VariantsByTag {
+		// TODO design question: space separated or comma separated with space allowed before after comma ?
 		opTags := strings.Split(opTagsSpaceSeparated, " ")
 
 		for _, searchedTag := range searchedTagNames {
@@ -68,7 +69,7 @@ type FilterArgs map[string]any
 
 // An ExprElt is a constituent of a CondExpr
 type ExprElt interface {
-	ToSQL(argsMap FilterArgs) (string, error)
+	ToSQL(h ParseHint, argsMap FilterArgs) (string, error)
 }
 
 // CondExpr is a list of ExprElt : either a Condition or another sub CondExpr.
@@ -83,20 +84,38 @@ func (se CondExpr) String() string {
 }
 
 func ToSQL(se CondExpr, args FilterArgs) (string, error) {
-	//h := ParseHint{}
-	return se.ToSQL(args)
+	h := ParseHint{}
+	return se.ToSQL(h, args)
+}
+
+type ParseHint struct {
+	FirstInExpr bool
+}
+
+func NewParseHint() *ParseHint {
+	return &ParseHint{
+		//FirstInExpr: true,
+	}
 }
 
 // ToSQL renders a CondExpr to an SQL string
 // If a Condition is set to if_present, it will be rendered only if its expected named argument is present in argsMap
-func (se CondExpr) ToSQL(argsMap FilterArgs) (string, error) {
+func (se CondExpr) ToSQL(h ParseHint, argsMap FilterArgs) (string, error) {
 	sql := ""
-	for _, exprElt := range se {
-		s, err := exprElt.ToSQL(argsMap)
+
+	sPrevRender := ""
+	for idx, exprElt := range se {
+		h.FirstInExpr = false
+		if idx == 0 || sPrevRender == "" {
+			h.FirstInExpr = true
+		}
+
+		s, err := exprElt.ToSQL(h, argsMap)
 		if err != nil {
 			return "", err
 		}
 		sql += s
+		sPrevRender = s
 	}
 	return sql, nil
 }
@@ -125,7 +144,7 @@ type Condition struct {
 	ArgName string
 }
 
-func (c Condition) ToSQL(argsMap FilterArgs) (string, error) {
+func (c Condition) ToSQL(h ParseHint, argsMap FilterArgs) (string, error) {
 	s := ""
 
 	if argsMap == nil {
@@ -141,12 +160,11 @@ func (c Condition) ToSQL(argsMap FilterArgs) (string, error) {
 		expectedArgName := c.ArgName[1:]
 
 		if _, found := argsMap[expectedArgName]; !found {
-			//fmt.Println("cond off as arg missing:", c.ArgName)
 			return "", nil
 		}
 	}
 
-	if c.LinkOperator != "" {
+	if c.LinkOperator != "" && !h.FirstInExpr {
 		s += " " + c.LinkOperator + " "
 	}
 	return s + fmt.Sprintf("%v %v %v", c.ColumnName, c.Operator, c.ArgName), nil

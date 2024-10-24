@@ -10,13 +10,13 @@ type Tokens []interface{}
 
 type ExprSeparator string
 
-func (s ExprSeparator) ToSQL(argsMap FilterArgs) (string, error) {
+func (s ExprSeparator) ToSQL(h ParseHint, argsMap FilterArgs) (string, error) {
 	return string(s), nil
 }
 
 type ExprOperator string
 
-func (s ExprOperator) ToSQL(argsMap FilterArgs) (string, error) {
+func (s ExprOperator) ToSQL(h ParseHint, argsMap FilterArgs) (string, error) {
 	return " " + string(s) + " ", nil
 }
 

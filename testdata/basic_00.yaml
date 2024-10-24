@@ -1,0 +1,14 @@
+---
+version: 1
+
+operations:
+  get-resources:
+    variants:
+      default:
+        condition:
+          - (
+          - if_present order_id = @orderID
+          - AND if_present consumer_org_id = @orgID
+          - AND if_present client_id = @clientID
+          - AND if_present consumer_id = @userID
+          - )

@@ -89,33 +89,32 @@ func ToSQL(se CondExpr, args FilterArgs) (string, error) {
 }
 
 type ParseHint struct {
-	FirstInExpr bool
-}
-
-func NewParseHint() *ParseHint {
-	return &ParseHint{
-		//FirstInExpr: true,
-	}
+	ExprNotEmpty bool
 }
 
 // ToSQL renders a CondExpr to an SQL string
 // If a Condition is set to if_present, it will be rendered only if its expected named argument is present in argsMap
 func (se CondExpr) ToSQL(h ParseHint, argsMap FilterArgs) (string, error) {
+
 	sql := ""
 
-	sPrevRender := ""
 	for idx, exprElt := range se {
-		h.FirstInExpr = false
-		if idx == 0 || sPrevRender == "" {
-			h.FirstInExpr = true
+		if idx == 0 {
+			h.ExprNotEmpty = false
 		}
 
 		s, err := exprElt.ToSQL(h, argsMap)
 		if err != nil {
 			return "", err
 		}
-		sql += s
-		sPrevRender = s
+
+		if s != "" {
+			sql += s
+
+			if _, ok := exprElt.(Condition); ok {
+				h.ExprNotEmpty = true
+			}
+		}
 	}
 	return sql, nil
 }
@@ -164,7 +163,7 @@ func (c Condition) ToSQL(h ParseHint, argsMap FilterArgs) (string, error) {
 		}
 	}
 
-	if c.LinkOperator != "" && !h.FirstInExpr {
+	if c.LinkOperator != "" && h.ExprNotEmpty {
 		s += " " + c.LinkOperator + " "
 	}
 	return s + fmt.Sprintf("%v %v %v", c.ColumnName, c.Operator, c.ArgName), nil

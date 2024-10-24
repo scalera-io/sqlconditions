@@ -82,6 +82,11 @@ func (se CondExpr) String() string {
 	return s
 }
 
+func ToSQL(se CondExpr, args FilterArgs) (string, error) {
+	//h := ParseHint{}
+	return se.ToSQL(args)
+}
+
 // ToSQL renders a CondExpr to an SQL string
 // If a Condition is set to if_present, it will be rendered only if its expected named argument is present in argsMap
 func (se CondExpr) ToSQL(argsMap FilterArgs) (string, error) {

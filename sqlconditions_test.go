@@ -111,13 +111,13 @@ func TestRunner(t *testing.T) {
 			}
 
 			opName := "get-resources"
-			exp, err := c.GetOperation(opName, []string{"default"})
+			exp, err := c.GetCondition(opName, []string{"default"})
 			if err != nil {
-				t.Errorf("GetOperation <%v> err: %v", opName, err)
+				t.Errorf("GetCondition <%v> err: %v", opName, err)
 				t.FailNow()
 			}
 
-			gotSQL, err := ToSQL(exp.CondExpr, args)
+			gotSQL, err := ToSQL(exp, args)
 			if err != nil {
 				t.Errorf("ToSQL err: %v", err)
 				t.FailNow()

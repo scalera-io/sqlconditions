@@ -21,8 +21,8 @@ func (s ExprOperator) ToSQL(h ParseHint, argsMap FilterArgs) (string, error) {
 }
 
 // ParseCondition parses a string and returns a Condition (an ExprElt)
-func ParseCondition(s string) (Condition, error) {
-	c := Condition{}
+func ParseCondition(s string) (BinaryCondition, error) {
+	c := BinaryCondition{}
 
 	if strings.HasPrefix(s, "AND ") {
 		s = strings.TrimPrefix(s, "AND ")
@@ -54,8 +54,8 @@ func ParseCondition(s string) (Condition, error) {
 }
 
 // transform a YAML condition into an expr
-func (expr Tokens) Parse() (CondExpr, error) {
-	var exprElts CondExpr
+func (expr Tokens) Parse() (Expr, error) {
+	var exprElts Expr
 
 	for idx, exprElt := range expr {
 		switch v := exprElt.(type) {

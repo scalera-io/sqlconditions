@@ -31,7 +31,7 @@ func (c *Config) Parse() error {
 			if customQuery.Tokens == nil {
 				return fmt.Errorf("Invalid (nil) tokens for SQL OpName:%v variant:%v", opName, variantName) // customQuery.Tokens)
 			}
-			customQuery.CondExpr, err = customQuery.Tokens.Parse()
+			customQuery.Expr, err = customQuery.Tokens.Parse()
 			if err != nil {
 				return fmt.Errorf("Parse err: %v for expr: %v", err, customQuery.Tokens)
 			}
@@ -49,7 +49,7 @@ func (c *Config) String() string {
 		sb.WriteString(fmt.Sprintf("\n %v:\n", opName))
 		for tags, customQuery := range opConfig.VariantsByTag {
 			sb.WriteString(fmt.Sprintf("   tags : %v\n", tags))
-			sb.WriteString(fmt.Sprintf("   cond : %v\n\n", customQuery.CondExpr))
+			sb.WriteString(fmt.Sprintf("   cond : %v\n\n", customQuery.Expr))
 		}
 	}
 

@@ -22,8 +22,8 @@ func StrSliceContains(ss []string, searched string) bool {
 	return false
 }
 
-func (c Config) GetOperation(opName string, searchedTagNames []string) (OperationParams, error) {
-	var opParam OperationParams
+func (c Config) GetCondition(opName string, searchedTagNames []string) (Condition, error) {
+	var opParam Condition
 
 	opConfig, ok := c.Operations[opName]
 	if !ok {
@@ -49,33 +49,33 @@ func (c Config) GetOperation(opName string, searchedTagNames []string) (Operatio
 	return opParam, ErrNotFound
 }
 
-// OperationConfig holds one or many OperationParams
+// OperationConfig holds one or many Condition
 type OperationConfig struct {
-	VariantsByTag map[string]*OperationParams `yaml:"variants"`
+	VariantsByTag map[string]*Condition `yaml:"variants"`
 }
 
-// OperationParams holds the parameters of a condition
-type OperationParams struct {
+// Condition holds the parameters of a condition
+type Condition struct {
 	Joins []string
 
 	Tokens `yaml:"condition"`
 
-	CondExpr `yaml:"ignore"`
+	Expr `yaml:"ignore"`
 }
 
 // FilterArgs is used to pass the set of available named argument to ToSQL methods
 // so that a Condition can be rendered with or without certains subconditions
 type FilterArgs map[string]any
 
-// An ExprElt is a constituent of a CondExpr
+// An ExprElt is a constituent of an Expr
 type ExprElt interface {
 	ToSQL(h ParseHint, argsMap FilterArgs) (string, error)
 }
 
-// CondExpr is a list of ExprElt : either a Condition or another sub CondExpr.
-type CondExpr []ExprElt
+// Expr is a list of ExprElt : either a BinaryCondition or another sub Expr.
+type Expr []ExprElt
 
-func (se CondExpr) String() string {
+func (se Expr) String() string {
 	s := ""
 	for _, exprElt := range se {
 		s += fmt.Sprintf("%v\n", exprElt)
@@ -83,18 +83,17 @@ func (se CondExpr) String() string {
 	return s
 }
 
-func ToSQL(se CondExpr, args FilterArgs) (string, error) {
+func ToSQL(op Condition, args FilterArgs) (string, error) {
 	h := ParseHint{}
-	return se.ToSQL(h, args)
+	return op.Expr.ToSQL(h, args)
 }
 
 type ParseHint struct {
 	ExprNotEmpty bool
 }
 
-// ToSQL renders a CondExpr to an SQL string
-// If a Condition is set to if_present, it will be rendered only if its expected named argument is present in argsMap
-func (se CondExpr) ToSQL(h ParseHint, argsMap FilterArgs) (string, error) {
+// ToSQL renders a Expr to an SQL string
+func (se Expr) ToSQL(h ParseHint, argsMap FilterArgs) (string, error) {
 
 	sql := ""
 
@@ -111,7 +110,7 @@ func (se CondExpr) ToSQL(h ParseHint, argsMap FilterArgs) (string, error) {
 		if s != "" {
 			sql += s
 
-			if _, ok := exprElt.(Condition); ok {
+			if _, ok := exprElt.(BinaryCondition); ok {
 				h.ExprNotEmpty = true
 			}
 		}
@@ -119,9 +118,9 @@ func (se CondExpr) ToSQL(h ParseHint, argsMap FilterArgs) (string, error) {
 	return sql, nil
 }
 
-// Condition holds all the parameters needed to render it in a SQL expression
+// BinaryCondition holds all the parameters of an SQL conditional expression and can be rendered as an SQL string
 // Current implementation expects ArgName to be a named argument prefixed with a @ character.
-type Condition struct {
+type BinaryCondition struct {
 	// Modality describes whether the condition is optional or mandatory
 	// If set to "if_present" the condition is optional : it will be rendered only if a named argument
 	// having the same name as ArgName is found at expression evaluation time
@@ -143,7 +142,7 @@ type Condition struct {
 	ArgName string
 }
 
-func (c Condition) ToSQL(h ParseHint, argsMap FilterArgs) (string, error) {
+func (c BinaryCondition) ToSQL(h ParseHint, argsMap FilterArgs) (string, error) {
 	s := ""
 
 	if argsMap == nil {
@@ -151,7 +150,7 @@ func (c Condition) ToSQL(h ParseHint, argsMap FilterArgs) (string, error) {
 	}
 
 	if len(c.ArgName) < 2 {
-		return "", fmt.Errorf("Condition ArgName invalid (too short): %v", c.ArgName)
+		return "", fmt.Errorf("BinaryCondition ArgName invalid (too short): %v", c.ArgName)
 	}
 
 	if c.Modality == "if_present" {
@@ -169,6 +168,6 @@ func (c Condition) ToSQL(h ParseHint, argsMap FilterArgs) (string, error) {
 	return s + fmt.Sprintf("%v %v %v", c.ColumnName, c.Operator, c.ArgName), nil
 }
 
-func (c Condition) String() string {
+func (c BinaryCondition) String() string {
 	return fmt.Sprintf("%v %v %v %v", c.Modality, c.ColumnName, c.Operator, c.ArgName)
 }

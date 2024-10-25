@@ -59,6 +59,17 @@ var (
 				},
 			},
 		},
+
+		TestFile{
+			"basic_02.yaml",
+
+			[]TestCase{
+				{
+					ArgNames("resourceIdentifier", "orgID"),
+					"resources.identifier = @resourceIdentifier AND resources.org_id = @orgID",
+				},
+			},
+		},
 	}
 )
 
@@ -113,7 +124,7 @@ func TestRunner(t *testing.T) {
 			}
 
 			if gotSQL != tc.ExpectedSQL {
-				t.Errorf("Expected: %v\nGot     : %v", tc.ExpectedSQL, gotSQL)
+				t.Errorf("\nExpected: %v\nGot     : %v", tc.ExpectedSQL, gotSQL)
 			}
 		}
 	}

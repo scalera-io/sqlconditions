@@ -1,0 +1,11 @@
+---
+version: 1
+
+operations:
+  get-resources:
+    variants:
+      default:
+        condition:
+          - if_present resources.identifier = @resourceIdentifier
+          - if_present resources.id = @resourceID
+          - AND must resources.org_id = @orgID
